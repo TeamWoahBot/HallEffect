@@ -1,0 +1,59 @@
+const int HES_Pin_L = 14;
+const int HES_Pin_R = 15;
+volatile byte half_revolutions_L;
+unsigned int rpm_L;
+unsigned long timeold_L;
+volatile byte half_revolutions_R;
+unsigned int rpm_R;
+unsigned long timeold_R;
+
+void setup() {
+  
+  pinMode(13, OUTPUT); //Onboard LED to output for diagnostics
+  //Flash the LED on and Off 10x
+  for (int i = 0; i < 10; i++) {
+    digitalWrite(13, HIGH);
+    delay(100);
+    digitalWrite(13, LOW);
+    delay(100);
+  }
+
+  Serial.begin(9600);
+  attachInterrupt(digitalPinToInterrupt(HES_Pin_L), magnet_detect_L, RISING);
+  attachInterrupt(digitalPinToInterrupt(HES_Pin_R), magnet_detect_R, RISING);
+  half_revolutions_L = 0;
+  rpm_L = 0;
+  timeold_L = 0;
+  half_revolutions_R = 0;
+  rpm_R = 0;
+  timeold_R = 0;
+}
+void magnet_detect_L()//This function is called whenever a magnet/interrupt is detected by the arduino
+ {
+  half_revolutions_L++;
+  Serial.println("detect_L");
+ }
+ 
+ void magnet_detect_R()//This function is called whenever a magnet/interrupt is detected by the arduino
+ {
+  half_revolutions_R++;
+  Serial.println("detect_R");
+ }
+
+void loop() {
+
+  if (half_revolutions_L >= 3) { 
+     rpm_L = 60*1000/(millis() - timeold_L)*half_revolutions_L;
+     timeold_L = millis();
+     half_revolutions_L = 0;
+     Serial.println(rpm_L*0.01064,3);
+   }
+
+    if (half_revolutions_R >= 3) { 
+     rpm_R = 60*1000/(millis() - timeold_R)*half_revolutions_R;
+     timeold_R = millis();
+     half_revolutions_R = 0;
+     Serial.println(rpm_R*0.01064,3);
+   }
+  
+}
